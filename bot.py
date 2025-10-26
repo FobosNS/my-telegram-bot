@@ -1,7 +1,7 @@
 import logging
 import os
 from aiogram import Bot, Dispatcher
-from aiogram.filters import CommandStart, Command
+from aiogram.filters import CommandStart, Regexp
 from aiogram.types import Message
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from aiohttp import web
@@ -30,22 +30,22 @@ async def handle_request(message: Message):
     await bot.send_message(ADMIN_ID, text + "\n\n/approve_" + str(message.from_user.id) + " /reject_" + str(message.from_user.id))
 
 # Одобрение заявки
-@dp.message(Command(commands=['approve_([0-9]+)'], regexp_commands=True))
-async def approve(message: Message, regexp_command):
+@dp.message(Regexp(regexp=r'^/approve_([0-9]+)$'))
+async def approve(message: Message, regexp: Regexp):
     if message.from_user.id != ADMIN_ID:
         await message.answer("❌ У вас нет прав для этой команды.")
         return
-    user_id = int(regexp_command.group(1))
+    user_id = int(regexp.group(1))
     await bot.send_message(user_id, f"✅ Ваша заявка одобрена! Вот ссылка: {GROUP_INVITE_LINK}")
     await message.answer("Пользователь уведомлён.")
 
 # Отклонение заявки
-@dp.message(Command(commands=['reject_([0-9]+)'], regexp_commands=True))
-async def reject(message: Message, regexp_command):
+@dp.message(Regexp(regexp=r'^/reject_([0-9]+)$'))
+async def reject(message: Message, regexp: Regexp):
     if message.from_user.id != ADMIN_ID:
         await message.answer("❌ У вас нет прав для этой команды.")
         return
-    user_id = int(regexp_command.group(1))
+    user_id = int(regexp.group(1))
     await bot.send_message(user_id, "❌ К сожалению, ваша заявка отклонена.")
     await message.answer("Пользователь уведомлён об отказе.")
 
