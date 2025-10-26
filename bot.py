@@ -30,7 +30,7 @@ async def handle_request(message: Message):
     await bot.send_message(ADMIN_ID, text + "\n\n/approve_" + str(message.from_user.id) + " /reject_" + str(message.from_user.id))
 
 # Одобрение заявки
-@dp.message(Regexp(regexp=r'^/approve_([0-9]+)$'))
+@dp.message(Regexp(r'^/approve_([0-9]+)$'))
 async def approve(message: Message, regexp: Regexp):
     if message.from_user.id != ADMIN_ID:
         await message.answer("❌ У вас нет прав для этой команды.")
@@ -40,7 +40,7 @@ async def approve(message: Message, regexp: Regexp):
     await message.answer("Пользователь уведомлён.")
 
 # Отклонение заявки
-@dp.message(Regexp(regexp=r'^/reject_([0-9]+)$'))
+@dp.message(Regexp(r'^/reject_([0-9]+)$'))
 async def reject(message: Message, regexp: Regexp):
     if message.from_user.id != ADMIN_ID:
         await message.answer("❌ У вас нет прав для этой команды.")
