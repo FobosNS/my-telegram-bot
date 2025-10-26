@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 # Переменные окружения
 API_TOKEN = os.getenv("BOT_TOKEN")
-ADMIN_IDS = {int(i) for i in os.getenv("ADMIN_IDS", "123456789").split(",")}
+ADMIN_IDS = {int(i) for i in os.getenv("ADMIN_IDS", "338313433").split(",")}
 GROUP_INVITE_LINK = os.getenv("GROUP_INVITE_LINK", "https://t.me/+your_invite_link")
 HOST = os.getenv("RENDER_EXTERNAL_HOSTNAME")
 
@@ -130,3 +130,4 @@ if __name__ == "__main__":
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
     main()
+
