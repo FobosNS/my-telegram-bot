@@ -1,5 +1,6 @@
 import logging
 import os
+import asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.filters import CommandStart, and_f
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
@@ -114,26 +115,42 @@ async def on_startup(_=None):
 async def on_shutdown(_=None):
     try:
         # Закрываем сессию бота
-        await bot.session.close()
+        if bot.session and not bot.session.closed:
+            await bot.session.close()
+            logger.info("Сессия бота закрыта")
         await bot.delete_webhook()
-        logger.info("Webhook удалён и сессия бота закрыта")
+        logger.info("Webhook удалён")
     except Exception as e:
         logger.error(f"Ошибка при завершении работы: {e}")
 
 # Запуск aiohttp приложения
-def main():
+async def run_app():
+    app = web.Application()
+    SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path='/webhook')
+    setup_application(app, dp, bot=bot)
+    port = int(os.getenv("PORT", 10000))
+    logger.info(f"Запуск приложения на порту {port}")
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', port)
+    await site.start()
+    logger.info(f"Приложение запущено на http://0.0.0.0:{port}")
+    return runner
+
+async def main():
     try:
-        app = web.Application()
-        SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path='/webhook')
-        setup_application(app, dp, bot=bot)
-        port = int(os.getenv("PORT", 10000))
-        logger.info(f"Запуск приложения на порту {port}")
-        web.run_app(app, host='0.0.0.0', port=port)
+        runner = await run_app()
+        # Держим приложение запущенным
+        await asyncio.Event().wait()
+    except (KeyboardInterrupt, SystemExit):
+        logger.info("Завершение работы приложения")
     except Exception as e:
         logger.error(f"Ошибка при запуске приложения: {e}")
         raise
+    finally:
+        # Гарантируем закрытие сессии и webhook
+        await on_shutdown()
+        await runner.cleanup()
 
 if __name__ == "__main__":
-    dp.startup.register(on_startup)
-    dp.shutdown.register(on_shutdown)
-    main()
+    asyncio.run(main())
