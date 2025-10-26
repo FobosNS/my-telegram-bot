@@ -5,7 +5,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.filters import CommandStart, and_f
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
-from aiohttp import web, ClientSession
+from aiohttp import web
 
 # Настройка логирования для диагностики
 logging.basicConfig(level=logging.INFO)
@@ -108,6 +108,9 @@ async def on_startup(_=None):
     try:
         await bot.set_webhook(webhook_url, drop_pending_updates=True)
         logger.info(f"Webhook установлен: {webhook_url}")
+        # Проверяем текущий webhook
+        webhook_info = await bot.get_webhook_info()
+        logger.info(f"Текущий webhook: {webhook_info.url}")
     except Exception as e:
         logger.error(f"Ошибка при установке webhook: {e}")
         raise
@@ -151,6 +154,10 @@ async def main():
         # Гарантируем закрытие сессии и webhook
         await on_shutdown()
         await runner.cleanup()
+        logger.info("Приложение полностью остановлено")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except Exception as e:
+        logger.error(f"Критическая ошибка при запуске: {e}")
