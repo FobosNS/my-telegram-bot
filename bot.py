@@ -4,7 +4,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.filters import CommandStart, and_f
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
-from aiohttp import web
+from aiohttp import web, ClientSession
 
 # Настройка логирования для диагностики
 logging.basicConfig(level=logging.INFO)
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 # Переменные окружения
 API_TOKEN = os.getenv("BOT_TOKEN")
-ADMIN_IDS = {int(i) for i in os.getenv("ADMIN_IDS", "338313433").split(",")}
+ADMIN_IDS = {int(i) for i in os.getenv("ADMIN_IDS", "123456789").split(",")}
 GROUP_INVITE_LINK = os.getenv("GROUP_INVITE_LINK", "https://t.me/+your_invite_link")
 HOST = os.getenv("RENDER_EXTERNAL_HOSTNAME")
 
@@ -24,6 +24,7 @@ if not HOST:
     logger.error("RENDER_EXTERNAL_HOSTNAME не установлен")
     raise ValueError("RENDER_EXTERNAL_HOSTNAME не установлен")
 
+# Инициализация бота
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 
@@ -59,9 +60,13 @@ async def handle_request(message: Message):
     msg_text = f"🔔 Новая заявка на вступление\n👤 @{username}\n💬 {text}"
     for admin_id in ADMIN_IDS:
         try:
+            # Проверяем, может ли бот отправить сообщение админу
+            await bot.send_chat_action(admin_id, "typing")
             await bot.send_message(admin_id, msg_text, reply_markup=keyboard)
         except Exception as e:
             logger.error(f"Ошибка при отправке заявки админу {admin_id}: {e}")
+            if "chat not found" in str(e).lower():
+                logger.warning(f"Админ {admin_id} не инициировал чат с ботом. Попросите админа написать /start боту.")
 
     await message.reply("✅ Ваша заявка отправлена на рассмотрение администраторам.")
 
@@ -108,10 +113,12 @@ async def on_startup(_=None):
 
 async def on_shutdown(_=None):
     try:
+        # Закрываем сессию бота
+        await bot.session.close()
         await bot.delete_webhook()
-        logger.info("Webhook удалён")
+        logger.info("Webhook удалён и сессия бота закрыта")
     except Exception as e:
-        logger.error(f"Ошибка при удалении webhook: {e}")
+        logger.error(f"Ошибка при завершении работы: {e}")
 
 # Запуск aiohttp приложения
 def main():
@@ -130,4 +137,3 @@ if __name__ == "__main__":
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
     main()
-
