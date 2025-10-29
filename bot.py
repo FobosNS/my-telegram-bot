@@ -35,7 +35,7 @@ requests = {}
 # Обработчик команды /start
 @dp.message(CommandStart())
 async def start(message: Message):
-    await message.reply("🌸 «Добро пожаловать! Я бот Kalantaienko — помогу тебе во всём 💫»")
+    await message.reply("🌸 Добро пожаловать! Я бот Kalantaienko — помогу тебе во всём 💫")
 
 # Обработка текстовых сообщений (заявка)
 @dp.message(and_f(lambda m: m.text, lambda m: not m.from_user.is_bot))
@@ -161,4 +161,5 @@ if __name__ == "__main__":
         asyncio.run(main())
     except Exception as e:
         logger.error(f"Критическая ошибка при запуске: {e}")
+
 
