@@ -131,6 +131,11 @@ async def run_app():
     app = web.Application()
     SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path='/webhook')
     setup_application(app, dp, bot=bot)
+
+    # ВАЖНО: Регистрируем startup и shutdown
+    app.on_startup.append(on_startup)
+    app.on_shutdown.append(on_shutdown)
+
     port = int(os.getenv("PORT", 10000))
     logger.info(f"Запуск приложения на порту {port}")
     runner = web.AppRunner(app)
@@ -143,24 +148,22 @@ async def run_app():
 async def main():
     try:
         runner = await run_app()
-        # Держим приложение запущенным
-        await asyncio.Event().wait()
+        await asyncio.Event().wait()  # Держим запущенным
     except (KeyboardInterrupt, SystemExit):
-        logger.info("Завершение работы приложения")
+        logger.info("Остановка...")
     except Exception as e:
-        logger.error(f"Ошибка при запуске приложения: {e}")
+        logger.error(f"Ошибка: {e}")
         raise
     finally:
-        # Гарантируем закрытие сессии и webhook
-        await on_shutdown()
         await runner.cleanup()
-        logger.info("Приложение полностью остановлено")
+        logger.info("Приложение остановлено")
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except Exception as e:
         logger.error(f"Критическая ошибка при запуске: {e}")
+
 
 
 
