@@ -35,7 +35,7 @@ requests = {}
 # Обработчик команды /start
 @dp.message(CommandStart())
 async def start(message: Message):
-    await message.reply("🌸 Добро пожаловать! Я бот Kalantaienko — помогу тебе во всём 💫")
+    await message.answer("🌸 Добро пожаловать! Я бот Kalantaienko — помогу тебе во всём 💫")
 
 # Обработка текстовых сообщений (заявка)
 @dp.message(and_f(lambda m: m.text, lambda m: not m.from_user.is_bot))
@@ -45,7 +45,7 @@ async def handle_request(message: Message):
     text = message.text.strip()
 
     if not text:
-        return await message.reply("Пожалуйста, напиши причину вступления 🙂")
+        return await message.answer("Пожалуйста, напиши причину вступления 🙂")
 
     # Сохраняем заявку
     requests[user_id] = text
@@ -69,7 +69,7 @@ async def handle_request(message: Message):
             if "chat not found" in str(e).lower():
                 logger.warning(f"Админ {admin_id} не инициировал чат с ботом. Попросите админа написать /start боту.")
 
-    await message.reply("✅ Ваша заявка отправлена на рассмотрение администраторам.")
+    await message.answer("✅ Ваша заявка отправлена на рассмотрение администраторам.")
 
 # Обработка inline-кнопок approve/reject
 @dp.callback_query(lambda c: c.data.startswith(("approve:", "reject:")))
@@ -161,5 +161,6 @@ if __name__ == "__main__":
         asyncio.run(main())
     except Exception as e:
         logger.error(f"Критическая ошибка при запуске: {e}")
+
 
 
